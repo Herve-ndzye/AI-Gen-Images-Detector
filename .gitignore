@@ -1,0 +1,10 @@
+
+node_modules/
+.expo/
+__pycache__/
+*.db
+*.pyc
+.env
+dist/
+build/
+web-build/
