@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { Platform } from 'react-native';
 
 // Replace with your local machine IP so your phone can reach the backend
 // Example: 'http://192.168.1.5:8000'
 const BASE_URL = 'http://127.0.0.1:8000'; 
+
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -11,11 +13,19 @@ const api = axios.create({
 
 export const analyzeImage = async (uri) => {
   const formData = new FormData();
-  formData.append('file', {
-    uri,
-    name: 'upload.jpg',
-    type: 'image/jpeg',
-  });
+
+  // Web vs Mobile handling
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    formData.append('file', blob, 'upload.jpg');
+  } else {
+    formData.append('file', {
+      uri,
+      name: 'upload.jpg',
+      type: 'image/jpeg',
+    });
+  }
 
   try {
     const response = await api.post('/analyze-image', formData, {

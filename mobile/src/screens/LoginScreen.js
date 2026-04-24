@@ -9,8 +9,9 @@ const LoginScreen = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleLogin = async () => {
+  const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -18,10 +19,17 @@ const LoginScreen = ({ onLogin }) => {
     
     setLoading(true);
     try {
-      const response = await api.post('/auth/login', { email, password });
-      onLogin(response.data.user);
+      if (isRegistering) {
+        await api.post('/auth/register', { email, password });
+        Alert.alert('Success', 'Account created! You can now log in.');
+        setIsRegistering(false);
+      } else {
+        const response = await api.post('/auth/login', { email, password });
+        onLogin(response.data.user);
+      }
     } catch (error) {
-      Alert.alert('Login Failed', error.response?.data?.detail || 'Invalid email or password');
+      const msg = error.response?.data?.detail || 'Authentication failed';
+      Alert.alert(isRegistering ? 'Registration Failed' : 'Login Failed', msg);
     } finally {
       setLoading(false);
     }
@@ -36,8 +44,8 @@ const LoginScreen = ({ onLogin }) => {
         <View style={styles.logoBadge}>
           <Ionicons name="finger-print" size={40} color="#3b82f6" />
         </View>
-        <Text style={styles.welcome}>Welcome back</Text>
-        <Text style={styles.subWelcome}>Sign in to verify your images</Text>
+        <Text style={styles.welcome}>{isRegistering ? 'Create Account' : 'Welcome back'}</Text>
+        <Text style={styles.subWelcome}>{isRegistering ? 'Join the forensic network' : 'Sign in to verify your images'}</Text>
       </View>
 
       <View style={styles.form}>
@@ -72,12 +80,15 @@ const LoginScreen = ({ onLogin }) => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-           <Text style={styles.loginText}>Sign In</Text>
+        <TouchableOpacity style={styles.loginButton} onPress={handleAuth} disabled={loading}>
+           <Text style={styles.loginText}>{loading ? 'Please wait...' : (isRegistering ? 'Sign Up' : 'Sign In')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.registerLink}>
-           <Text style={styles.registerText}>Don't have an account? <Text style={styles.blueText}>Sign Up</Text></Text>
+        <TouchableOpacity style={styles.registerLink} onPress={() => setIsRegistering(!isRegistering)}>
+           <Text style={styles.registerText}>
+             {isRegistering ? 'Already have an account? ' : "Don't have an account? "}
+             <Text style={styles.blueText}>{isRegistering ? 'Sign In' : 'Sign Up'}</Text>
+           </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
